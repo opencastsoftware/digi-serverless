@@ -42,8 +42,6 @@ custom:
     caching: true
     externals:
       - osmosis
-    fixPackages:
-      - libxmljs
 functions:
   SaveOpportunity:
     handler: lambdas/src/save-opportunity/save-opportunity.saveOpp

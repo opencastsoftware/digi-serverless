@@ -26,6 +26,8 @@ provider:
 
 # you can add packaging information here
 #package:
+package:
+  individually: true
 #  include:
 #    - include-me.js
 #    - include-me-dir/**
@@ -38,15 +40,21 @@ custom:
   bundle:
     sourcemaps: true # Enable source maps
     caching: true
+    externals:
+      - osmosis
+    fixPackages:
+      - libxmljs
 functions:
   SaveOpportunity:
     handler: lambdas/src/save-opportunity/save-opportunity.saveOpp
     role:
       'Fn::GetAtt': ['LamnbdaHandlerRole', 'Arn']
+    memorySize: 256
   FindOpportunity:
     handler: lambdas/src/find-opportunity/find-opportunity.handler
     role:
       'Fn::GetAtt': ['LamnbdaHandlerRole', 'Arn']
+    memorySize: 256
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events
 #    Check the event documentation for details

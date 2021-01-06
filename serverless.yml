@@ -40,8 +40,6 @@ custom:
   bundle:
     sourcemaps: true # Enable source maps
     caching: true
-    externals:
-      - osmosis
 functions:
   SaveOpportunity:
     handler: lambdas/src/save-opportunity/save-opportunity.saveOpp

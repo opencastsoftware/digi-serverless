@@ -1,5 +1,14 @@
+import {saveOpp} from '../save-opportunity';
+
+let event;
+
+beforeEach(()=>{
+    event = {};
+})
+
 describe('save-opportunity',()=>{
-    it('should pass',()=>{
-        expect(true).toBe(true);
+    it('should return the right result',()=>{
+        const result = saveOpp(event);
+        expect(result).toEqual('bob');
     })
 })

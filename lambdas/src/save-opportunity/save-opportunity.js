@@ -1,6 +1,6 @@
-const moment = require('moment');
+import moment from 'moment';
 
-module.exports.saveOpp = async event => {
+export async function saveOpp(event) {
     console.log(moment.utc());
     return {
       statusCode: 200,

@@ -1,10 +1,36 @@
-const oppFinder = require("../find-opportunity");
-const nock = require("nock");
-const fs = require("fs");
-const { join } = require("path");
-const { data } = require("osmosis");
-const AWS = require("aws-sdk");
+import AWS from 'aws-sdk';
+import handler, {convertDataToMessage} from '../find-opportunity';
+import nock from 'nock';
+import fs  from 'fs';
+import {join} from 'path';
 
+
+import findOpportunitiesOnPage from '../helpers/find-opportunities-on-page';
+import totalNumberOfPages from '../helpers/total-number-of-pages';
+import findAllOpportunities from '../helpers/find-all-opportunities';
+
+
+
+// jest.mock('aws-sdk', ()=>{
+//   return {
+//     SQS: jest.fn().mockImplementation(()=> { return {
+//       sendMessage: jest.fn().mockImplementation(()=>{
+//         return {
+//           promise: jest.fn().mockResolvedValue(true)
+//         }
+//       })
+//     }
+//   }
+//     ),
+//     config: {
+//       update: jest.fn(),
+//     }
+//   }
+// });
+
+jest.mock('aws-sdk');
+const sqs = new AWS.SQS();
+  
 describe("Find latest opportunites", () => {
   const dateFrom = 1606435199000; //26 November 2020 23:59:59
   const url =
@@ -19,7 +45,7 @@ describe("Find latest opportunites", () => {
       .get("/digital-outcomes-and-specialists/opportunities")
       .reply(200, fixture);
 
-    data = await oppFinder.findOpportunitiesOnPage(url, dateFrom);
+    data = await findOpportunitiesOnPage(url, dateFrom);
   });
 
   it("should gather the opportunities from the page", () => {
@@ -80,7 +106,7 @@ describe("Find total pages of opportunites", () => {
       .get("/digital-outcomes-and-specialists/opportunities")
       .reply(200, fixture);
 
-    const total = await oppFinder.totalNumberOfPages();
+    const total = await totalNumberOfPages();
     expect(total).toEqual(4);
   });
 });
@@ -120,14 +146,12 @@ describe("Find all opportunites", () => {
       .get("/digital-outcomes-and-specialists/opportunities?page=4")
       .reply(200, page4);
 
-    const data = await oppFinder.findAllOpportunities();
+    const data = await findAllOpportunities();
     expect(data.length).toEqual(117);
   });
 });
 
 describe("lamdba handler", () => {
-  oppFinder.sqs.sendMessage = jest.fn();
-
   jest.spyOn(global.Date, "now").mockImplementation(() => 1606521599000);
 
   const fixture = fs
@@ -138,18 +162,18 @@ describe("lamdba handler", () => {
     nock("https://www.digitalmarketplace.service.gov.uk")
       .get("/digital-outcomes-and-specialists/opportunities")
       .reply(200, fixture);
+
+      sqs.sendMessage.mockClear();
   });
 
   it("should return a status of 201", async () => {
-    const response = await oppFinder.handler({});
+    const response = await handler({});
     expect(response.statusCode).toEqual(201);
   });
 
   it("should send new opportunities to the queue", async () => {
-    const response = await oppFinder.handler({});
-    await new Promise((r) => setTimeout(r, 2000));
-    //expect(oppFinder.sqs.sendMessage.mock.calls.length).toEqual(8);
-    expect(oppFinder.sqs.sendMessage.mock.calls.length).toEqual(26);
+     await handler({});
+     expect(sqs.sendMessage).toHaveBeenCalledTimes(13);
   });
 });
 
@@ -167,7 +191,7 @@ describe("convert data to SQS message", () => {
     id: 13525,
   };
 
-  const message = oppFinder.convertDataToMessage(data);
+  const message = convertDataToMessage(data);
 
   it("should set the title", () => {
     expect(message.MessageAttributes.Title.DataType).toEqual("String");

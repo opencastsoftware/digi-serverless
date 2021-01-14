@@ -34,16 +34,14 @@ package:
 #  exclude:
 #    - exclude-me.js
 #    - exclude-me-dir/**
-plugins:
-  - serverless-bundle
-custom:
-  bundle:
-    sourcemaps: true # Enable source maps
-    caching: true
-    externals:
-      - osmosis
-    fixPackages:
-      - libxmljs
+#plugins:
+##  - serverless-bundle
+#custom:
+# bundle:
+#   sourcemaps: true # Enable source maps
+# caching: true
+# externals:
+# - osmosis
 functions:
   SaveOpportunity:
     handler: lambdas/src/save-opportunity/save-opportunity.saveOpp

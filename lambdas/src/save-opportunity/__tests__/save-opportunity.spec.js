@@ -7,8 +7,8 @@ beforeEach(()=>{
 })
 
 describe('save-opportunity',()=>{
-    it('should return the right result',()=>{
-        const result = saveOpp(event);
-        expect(result).toEqual('bob');
+    it('should return the right result',async ()=>{
+        const result = await saveOpp(event);
+        expect(result.statusCode).toEqual(200);
     })
 })

@@ -1,4 +1,4 @@
-const osmosis = require("osmosis");
+import osmosis from 'osmosis'
 
 export default function findOpportunitiesOnPage(url, dateFrom) {
     console.log(

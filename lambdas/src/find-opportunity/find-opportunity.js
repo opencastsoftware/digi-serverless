@@ -1,32 +1,15 @@
-const osmosis = require("osmosis");
-const AWS = require("aws-sdk");
+import AWS from 'aws-sdk';
+import { parseZone } from 'moment';
+import findOpportunitiesOnPage from './helpers/find-opportunities-on-page';
+
+
 AWS.config.update({ region: "eu-west-2" });
 const sqs = new AWS.SQS({ apiVersion: "2012-11-05" });
-AWS.config.logger = console;
 
 const base_url =
   "https://www.digitalmarketplace.service.gov.uk/digital-outcomes-and-specialists/opportunities";
 
-
-
-
-//findAllOpportunities().then((opportunity) => console.log(opportunity));
-
-function totalNumberOfPages() {
-  return new Promise((resolve) => {
-    let total;
-    osmosis
-      .get(base_url)
-      .find('//*[@id="js-dm-live-search-results"]/nav/ul/li/a/span[3]')
-      .set("total")
-      .data((x) => {
-        total = parseInt(x.total.match(/\d+ of (\d+)/).pop());
-      })
-      .done(() => resolve(total));
-  });
-}
-
-function convertDataToMessage(data) {
+export function convertDataToMessage(data) {
   return {
     DelaySeconds: 10,
     MessageAttributes: {
@@ -72,15 +55,17 @@ function convertDataToMessage(data) {
   };
 }
 
-const handler = async (event) => {
+export default async function handler(event) {
   const yesterday = Date.now() - 86400000 * 3;
   const opps = await findOpportunitiesOnPage(base_url, yesterday);
   console.log("OPPS: " + opps.length);
-  const promises = opps.map(async (opp) => {
+  const promises = opps.map((opp) => {
     const message = convertDataToMessage(opp);
-    console.log(message);
+    // console.log(message);
     return sqs.sendMessage(message).promise();
   });
+  
+  
   console.log("Promises: " + promises.length);
   await Promise.allSettled(promises).then((results) =>
     results.forEach((result) => console.log("RES", result))
@@ -93,13 +78,3 @@ const handler = async (event) => {
   return response;
 };
 
-//handler({});
-
-module.exports = {
-  findOpportunitiesOnPage,
-  findAllOpportunities,
-  totalNumberOfPages,
-  convertDataToMessage,
-  handler,
-  sqs,
-};
